@@ -4,12 +4,14 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import { transcribeRouter } from './routes/transcribe.js';
+
 
 // Routers
 import { healthRouter } from './routes/health.js'
 
 dotenv.config();
-// console.log(process.env.MONGODB_URI);
+// console.log(process.env.ASSEMBLYAI_API_KEY);
 
 // Connect to MongoDB
 await mongoose
@@ -41,6 +43,7 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api/health', healthRouter);
+app.use('/api/transcribe', transcribeRouter);
 
 // Global error handling
 app.use((err, _req, res, next) => {
