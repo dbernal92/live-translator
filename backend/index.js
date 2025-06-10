@@ -8,7 +8,7 @@ import { transcribeRouter } from './routes/transcribe.js';
 
 
 // Routers
-import { healthRouter } from './routes/health.js'
+import { healthRouter } from './routes/transcribe.js'
 
 dotenv.config();
 // console.log(process.env.ASSEMBLYAI_API_KEY);
