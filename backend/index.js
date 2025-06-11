@@ -1,23 +1,20 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+console.log('[Loaded API Key]', process.env.ASSEMBLYAI_API_KEY);
+
+
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import cors from 'cors';
-import mongoose from 'mongoose';
-import { transcribeRouter } from './routes/transcribe.js';
+// import mongoose from 'mongoose';
 
 
 // Routers
-import { healthRouter } from './routes/transcribe.js'
+import { transcribeRouter } from './routes/transcribe.js';
 
-dotenv.config();
 // console.log(process.env.ASSEMBLYAI_API_KEY);
-
-// Connect to MongoDB
-await mongoose
-.connect(process.env.MONGODB_URI)
-.then(() => console.log("Connected to MongoDB"))
-.catch((e) => console.error(e));
 
 const PORT = process.env.PORT || 4000;
 
@@ -42,7 +39,6 @@ app.get('/', (req, res) => {
 })
 
 // API Routes
-app.use('/api/health', healthRouter);
 app.use('/api/transcribe', transcribeRouter);
 
 // Global error handling
