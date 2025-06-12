@@ -13,14 +13,18 @@ import fetch from 'node-fetch'; // To send HTTP requests to AssemblyAI
 // Import Mongoose model for storing transcript IDs
 import { Transcript } from '../models/Transcript.js';
 
+// Setup current file and directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Create router and configure file upload destination
 const router = express.Router();
 const upload = multer({ dest: `${__dirname}/../uploads/` });
 
+// Trim API key from .env
 const apiKey = process.env.ASSEMBLYAI_API_KEY?.trim();
 
+// POST route to handle audio transcription
 router.post('/', upload.single('audio'), async (req, res) => {
   try {
     const filePath = req.file.path;
@@ -28,10 +32,10 @@ router.post('/', upload.single('audio'), async (req, res) => {
     console.log('File Path', filePath, 'Exists:', fs.existsSync(filePath));
     console.log('API Key Present', !!apiKey);
 
-    // Read file into memory
+    // Step 1: Read the uploaded file into memory
     const fileBuffer = fs.readFileSync(filePath);
 
-    // Upload to AssemblyAI
+    // Step 2: Upload file to AssemblyAI
     let audio_url;
     try {
       const uploadRes = await fetch('https://api.assemblyai.com/v2/upload', {
@@ -53,7 +57,7 @@ router.post('/', upload.single('audio'), async (req, res) => {
       return res.status(500).send('Failed to upload audio to AssemblyAI.');
     }
 
-    // Request transcription
+    // Step 3: Request transcription using uploaded audio URL
     try {
       const transcriptRes = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
@@ -70,11 +74,15 @@ router.post('/', upload.single('audio'), async (req, res) => {
       const rawTranscriptText = await transcriptRes.text();
       const transcriptData = JSON.parse(rawTranscriptText);
 
-      // Save transcript_id to MongoDB
+      // Step 4: Save transcript ID to MongoDB
       await Transcript.create({ transcript_id: transcriptData.id });
 
-      // Respond with the transcript_id
+      // Step 5: Respond to client with the transcript ID
       res.json({ transcript_id: transcriptData.id });
+
+      // Saves transcript ID to MongoDB collection
+      await Transcript.create({ transcript_id: transcriptData.id });
+      
     } catch (transcriptErr) {
       console.error('[Transcription Request Error]', transcriptErr);
       return res.status(500).send('Failed to request transcription.');
@@ -85,4 +93,5 @@ router.post('/', upload.single('audio'), async (req, res) => {
   }
 });
 
+// Export router for use in main app
 export { router as transcribeRouter };
