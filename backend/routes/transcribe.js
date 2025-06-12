@@ -1,12 +1,17 @@
+// Load environment variables
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Import dependencies
 import express from 'express';
-import multer from 'multer';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import fetch from 'node-fetch';
+import multer from 'multer'; // For handling file uploads
+import fs from 'fs'; // For reading the uploaded file
+import { fileURLToPath } from 'url'; // Helps get current file path in ES modules
+import { dirname } from 'path'; // Helps get directory name in ES modules
+import fetch from 'node-fetch'; // To send HTTP requests to AssemblyAI
+
+// Import Mongoose model for storing transcript IDs
+import { Transcript } from '../models/Transcript.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,9 +68,12 @@ router.post('/', upload.single('audio'), async (req, res) => {
       });
 
       const rawTranscriptText = await transcriptRes.text();
-      // console.log('[Transcript Raw Response]', rawTranscriptText);
-
       const transcriptData = JSON.parse(rawTranscriptText);
+
+      // Save transcript_id to MongoDB
+      await Transcript.create({ transcript_id: transcriptData.id });
+
+      // Respond with the transcript_id
       res.json({ transcript_id: transcriptData.id });
     } catch (transcriptErr) {
       console.error('[Transcription Request Error]', transcriptErr);

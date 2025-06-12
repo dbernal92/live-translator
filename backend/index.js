@@ -1,25 +1,31 @@
+// Load environment variables from .env file
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Log the AssemblyAI API key status (for debugging)
 console.log('[Loaded API Key]', process.env.ASSEMBLYAI_API_KEY);
 
-
+// Core server dependencies
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
-// import mongoose from 'mongoose';
-
+import mongoose from 'mongoose';
 
 // Routers
 import { transcribeRouter } from './routes/transcribe.js';
-
-// console.log(process.env.ASSEMBLYAI_API_KEY);
 
 const PORT = process.env.PORT || 4000;
 
 const app = express();
 
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch((err) => console.error('MongoDB Connection Error:', err));
 
 // View Engine
 app.set('views', "./views");
@@ -44,6 +50,6 @@ app.use('/api/transcribe', transcribeRouter);
 // Global error handling
 app.use((err, _req, res, next) => {
     res.status(500).send("Seems like we messed up somewhere...");
-  });
+});
 
 app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));
