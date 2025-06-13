@@ -20,12 +20,10 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('MongoDB Connection Error:', err));
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB Connection Error:', err));
+
 
 // View Engine
 app.set('views', "./views");
@@ -49,7 +47,7 @@ app.use('/api/transcribe', transcribeRouter);
 
 // Global error handling
 app.use((err, _req, res, next) => {
-    res.status(500).send("Seems like we messed up somewhere...");
+    res.status(500).send(`Error: ${err.message}`);
 });
 
 app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));

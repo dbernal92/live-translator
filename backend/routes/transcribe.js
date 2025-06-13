@@ -24,6 +24,28 @@ const upload = multer({ dest: `${__dirname}/../uploads/` });
 // Trim API key from .env
 const apiKey = process.env.ASSEMBLYAI_API_KEY?.trim();
 
+// GET route to check the status of a transcription
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const response = await fetch(`https://api.assemblyai.com/v2/transcript/${id}`, {
+      method: 'GET',
+      headers: {
+        authorization: apiKey,
+      },
+    });
+
+    const transcriptData = await response.json();
+
+    res.json(transcriptData);
+  } catch (error) {
+    console.error('[Get Transcript Error]', error);
+    res.status(500).send('Failed to retrieve transcript.');
+  }
+});
+
+
 // POST route to handle audio transcription
 router.post('/', upload.single('audio'), async (req, res) => {
   try {
@@ -68,28 +90,39 @@ router.post('/', upload.single('audio'), async (req, res) => {
         body: JSON.stringify({
           audio_url,
           language_code: 'ko', // Korean
+          speaker_labels: true // Speaker separation
         }),
       });
 
       const rawTranscriptText = await transcriptRes.text();
       const transcriptData = JSON.parse(rawTranscriptText);
 
-      // Step 4: Save transcript ID to MongoDB
-      await Transcript.create({ transcript_id: transcriptData.id });
+      // Step 4: Save transcript ID to MongoDB (handle duplicates gracefully)
+      try {
+        await Transcript.create({ transcript_id: transcriptData.id });
+      } catch (err) {
+        if (err.code === 11000) {
+          console.warn('Duplicate transcript_id detected. Skipping insert.');
+        } else {
+          throw err;
+        }
+      }
 
       // Step 5: Respond to client with the transcript ID
-      res.json({ transcript_id: transcriptData.id });
-
-      // Saves transcript ID to MongoDB collection
-      await Transcript.create({ transcript_id: transcriptData.id });
-      
+      if (!res.headersSent) {
+        res.json({ transcript_id: transcriptData.id });
+      }
     } catch (transcriptErr) {
       console.error('[Transcription Request Error]', transcriptErr);
-      return res.status(500).send('Failed to request transcription.');
+      if (!res.headersSent) {
+        res.status(500).send('Failed to request transcription.');
+      }
     }
   } catch (error) {
     console.error('[Transcribe Route Error]', error);
-    res.status(500).send('Something went wrong.');
+    if (!res.headersSent) {
+      res.status(500).send('Something went wrong.');
+    }
   }
 });
 
