@@ -67,7 +67,8 @@ router.get('/', async (req, res) => {
     res.json(data); //returns data back to requester
   }
   catch (error) {
-
+    console.error(error); //debugging
+    es.status(500).json({error: "Failed to fetch transcripts."})
   }
 }) 
 
