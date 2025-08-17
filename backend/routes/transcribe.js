@@ -24,6 +24,8 @@ const upload = multer({ dest: `${__dirname}/../uploads/` });
 // Trim API key from .env
 const apiKey = process.env.ASSEMBLYAI_API_KEY?.trim();
 
+
+
 // GET 
 // Check the status of a transcription
 router.get('/:id', async (req, res) => {
@@ -59,21 +61,18 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// View all transcripts
+// Fetch all transcripts from database
 router.get('/', async (req, res) => {
   try {
     const response = await fetch(`https://api.assemblyai.com/v2/transcript/`, ); 
-    const data = await response.json(); //parses the response into usable data
-    res.json(data); //returns data back to requester
+    const transcripts = await Transcript.find({}); //find all stored transcripts in the Transcript collection
+    res.json(transcrpts); //returns transcripts back to requester as a json
   }
   catch (error) {
-    console.error(error); //debugging
-    es.status(500).json({error: "Failed to fetch transcripts."})
+    console.error('[All Transcripts Error]', error); //log errors for debugging
+    es.status(500).json({error: "Failed to fetch transcripts from database."}) //send error message
   }
 }) 
-
-
-
 
 
 
