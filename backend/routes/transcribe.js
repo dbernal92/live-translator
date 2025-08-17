@@ -61,18 +61,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Fetch all transcripts from database
+// Fetch all transcripts from your database
 router.get('/', async (req, res) => {
   try {
-    const response = await fetch(`https://api.assemblyai.com/v2/transcript/`, ); 
-    const transcripts = await Transcript.find({}); //find all stored transcripts in the Transcript collection
-    res.json(transcrpts); //returns transcripts back to requester as a json
+    const transcripts = await Transcript.find({});
+    res.json(transcripts);
+  } catch (error) {
+    console.error('[All Transcripts Error]', error);
+    res.status(500).json({ error: "Failed to fetch transcripts from database." });
   }
-  catch (error) {
-    console.error('[All Transcripts Error]', error); //log errors for debugging
-    es.status(500).json({error: "Failed to fetch transcripts from database."}) //send error message
-  }
-}) 
+});
+
 
 
 
