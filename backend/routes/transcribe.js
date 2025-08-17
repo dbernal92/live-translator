@@ -24,7 +24,8 @@ const upload = multer({ dest: `${__dirname}/../uploads/` });
 // Trim API key from .env
 const apiKey = process.env.ASSEMBLYAI_API_KEY?.trim();
 
-// GET route to check the status of a transcription
+// GET 
+// Check the status of a transcription
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -38,6 +39,19 @@ router.get('/:id', async (req, res) => {
 
     const transcriptData = await response.json();
 
+    // If the transcription is completed, update record in MongoDB
+    if (transcriptData.status === 'completed') {
+      await Transcript.findOneAndUpdate(
+        { transcript_id: id },
+        {
+          text: transcriptData.text,
+          confidence: transcriptData.confidence,
+          words: transcriptData.words,
+        },
+        { new: true }
+      );
+    }
+
     res.json(transcriptData);
   } catch (error) {
     console.error('[Get Transcript Error]', error);
@@ -45,8 +59,25 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// View all transcripts
+router.get('/', async (req, res) => {
+  try {
+    const response = await fetch(`https://api.assemblyai.com/v2/transcript/`, ); 
+    const data = await response.json(); //parses the response into usable data
+    res.json(data); //returns data back to requester
+  }
+  catch (error) {
 
-// POST route to handle audio transcription
+  }
+}) 
+
+
+
+
+
+
+// POST
+// Route to handle audio transcription
 router.post('/', upload.single('audio'), async (req, res) => {
   try {
     const filePath = req.file.path;
